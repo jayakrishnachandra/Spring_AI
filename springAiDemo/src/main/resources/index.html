@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Boot Flux Stream Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 90%;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        #chat-box {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+            white-space: pre-wrap; /* Preserves spaces and line breaks */
+            border-radius: 4px;
+        }
+        .input-group {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        input {
+            flex-grow: 1;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:disabled {
+            background-color: #cccccc;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Spring AI Streaming Chat</h2>
+<div id="chat-box">Type a message below to start streaming...</div>
+
+<div class="input-group">
+    <input type="text" id="user-message" placeholder="Ask something..." value="Write a short poem about coding">
+    <button id="send-btn" onclick="startStream()">Send</button>
+</div>
+
+<script>
+    let eventSource = null;
+
+    function startStream() {
+        const messageInput = document.getElementById("user-message");
+        const chatBox = document.getElementById("chat-box");
+        const sendBtn = document.getElementById("send-btn");
+
+        const message = encodeURIComponent(messageInput.value.trim());
+        if (!message) return;
+
+        // Clear previous response and disable button during active stream
+        chatBox.textContent = "";
+        sendBtn.disabled = true;
+
+        // 1. Close any existing open connections
+        if (eventSource) {
+            eventSource.close();
+        }
+
+        // 2. Point this to your Spring Boot streaming endpoint url
+        const url = `http://localhost:8080/chatClient/ReactivefluxChat/${message}`;
+        eventSource = new EventSource(url);
+
+        // 3. Triggered every single time a text token arrives from the Flux stream
+        eventSource.onmessage = function(event) {
+            // Spring Boot SSE format puts the text in event.data
+            chatBox.textContent += event.data;
+
+            // Auto-scroll chat box to the bottom as text populates
+            chatBox.scrollTop = chatBox.scrollHeight;
+        };
+
+        // 4. Triggered when the backend finishes generating and closes the connection
+        eventSource.onerror = function(error) {
+            console.log("Stream ended or closed by server.");
+            eventSource.close();
+            sendBtn.disabled = false; // Re-enable send button
+        };
+    }
+</script>
+
+</body>
+</html>

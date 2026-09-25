@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: springAiDemo
+  output:
+    ansi:
+      enabled: ALWAYS
+
+
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: gemma4:cloud
+      init:
+        pull-model-strategy: when_missing
+      embedding:
+        model: mxbai-embed-large
+#        is default model for embedding with ollama
+
+    vectorstore:
+      mongodb:
+        initialize-schema: true
+        collection-name: custom_vector_store
+        index-name: custom_vector_index2
+        path-name: embedding    #where the embedding is stored in the document
+
+    mcp:
+      client:
+        stdio:
+          servers-configuration: classpath:/mcp-servers-config.json
+
+
+  mongodb:
+    uri: mongodb+srv://vemanajayakrishnachandra:zfdW9GC7XDsW8yWV@cluster0.sr8th.mongodb.net/?appName=Cluster0
+    database: spring_ai_demo
+    initialization-mode: always
+
+#  gpt-oss:120b:cloud
+#  qwen3.5:cloud
+#  gemma4:cloud
+#logging level to info
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.ai.mcp: DEBUG
+    io.modelcontextprotocol: DEBUG
+    com.example: INFO
+
+
+# emoji is not printing properly in log
