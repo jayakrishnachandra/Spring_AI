@@ -11,8 +11,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Print a message
-        run: echo "Hello! GitHub Actions is working!"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Print a friendly greeting
+        run: |
+          echo "Hello! GitHub Actions is working! 👋"
+          echo "---------------------------------------"
+          echo "🚀 Project Health Check:"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Total Files in Repo: $(find . -type f | wc -l)"
+          echo "Current User: ${{ github.actor }}"
+          echo "---------------------------------------"
 
       - name: Show system information
         run: |
