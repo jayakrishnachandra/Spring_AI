@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>22</java.version>
+		<java.version>21</java.version>
 		<spring-ai.version>2.0.1</spring-ai.version>
 	</properties>
 	<dependencies>
@@ -153,8 +153,8 @@
 					</execution>
 				</executions>
 				<configuration>
-					<source>22</source>
-					<target>22</target>
+					<source>21</source>
+					<target>21</target>
 				</configuration>
 			</plugin>
 		</plugins>
