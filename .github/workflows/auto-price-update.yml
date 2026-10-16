@@ -1,21 +1,28 @@
 name: Clock Bot
+
 on:
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
+  schedule:
+    # run every 15 minutes, offset away from the congested :00/:05/:30 marks
+    - cron: '7,22,37,52 * * * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: clock-bot
+  cancel-in-progress: false
 
 jobs:
   update-time:
+    name: Update timestamp
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Update Timestamp
+      - name: Update timestamp
         id: ts
         run: |
           NOW="$(date -u '+%Y-%m-%d %H:%M UTC')"
@@ -25,7 +32,7 @@ jobs:
             echo "This is an automated update to verify PR creation."
           } > TIMESTAMP.md
 
-      - name: Create Pull Request
+      - name: Create pull request
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
