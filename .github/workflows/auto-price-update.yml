@@ -1,0 +1,36 @@
+name: Clock Bot
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  update-time:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update Timestamp
+        id: ts
+        run: |
+          NOW="$(date -u '+%Y-%m-%d %H:%M UTC')"
+          echo "now=$NOW" >> "$GITHUB_OUTPUT"
+          {
+            echo "Last Updated (UTC): $NOW"
+            echo "This is an automated update to verify PR creation."
+          } > TIMESTAMP.md
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update timestamp"
+          title: "⏰ Time Update: ${{ steps.ts.outputs.now }}"
+          body: "Automated timestamp update to verify the PR pipeline."
+          branch: auto-time-update
+          delete-branch: true

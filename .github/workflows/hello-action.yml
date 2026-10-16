@@ -1,0 +1,21 @@
+name: My First GitHub Action
+# This tells GitHub to run the workflow when you manually click a button
+# or every time you push code to any branch.
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  say-hello:
+    # This spins up a brand new, clean Linux virtual machine in the cloud
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print a message
+        run: echo "Hello! GitHub Actions is working!"
+
+      - name: Show system information
+        run: |
+          echo "I am running on a machine hosted by GitHub."
+          echo "Operating System details:"
+          uname -a
