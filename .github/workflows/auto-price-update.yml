@@ -1,43 +1,52 @@
-name: Clock Bot
-
+name: Friendly Clock Bot
 on:
-  workflow_dispatch:
   schedule:
-    # run every 15 minutes, offset away from the congested :00/:05/:30 marks
     - cron: '7,22,37,52 * * * *'
-
-permissions:
-  contents: write
-  pull-requests: write
-
-concurrency:
-  group: clock-bot
-  cancel-in-progress: false
+  workflow_dispatch:
 
 jobs:
   update-time:
-    name: Update timestamp
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Update timestamp
-        id: ts
+      - name: Generate Personalized Greeting
+        id: greeting
         run: |
-          NOW="$(date -u '+%Y-%m-%d %H:%M UTC')"
-          echo "now=$NOW" >> "$GITHUB_OUTPUT"
-          {
-            echo "Last Updated (UTC): $NOW"
-            echo "This is an automated update to verify PR creation."
-          } > TIMESTAMP.md
+          DAY=$(date -u +%A)
+          TIME=$(date -u '+%Y-%m-%d %H:%M UTC')
+
+          if [ "$DAY" == "Monday" ]; then
+            MSG="Happy Monday! Let's start the week strong! 💪"
+          elif [ "$DAY" == "Friday" ]; then
+            MSG="Happy Friday! The weekend is almost here! 🎉"
+          else
+            MSG="Hello! Hope your $DAY is going great! ✨"
+          fi
+
+          echo "day=$DAY" >> "$GITHUB_OUTPUT"
+          echo "msg=$MSG" >> "$GITHUB_OUTPUT"
+          echo "time=$TIME" >> "$GITHUB_OUTPUT"
+
+      - name: Update Timestamp
+        run: |
+          echo "# System Status" > TIMESTAMP.md
+          echo "" >> TIMESTAMP.md
+          echo "**Greeting:** ${{ steps.greeting.outputs.msg }}" >> TIMESTAMP.md
+          echo "**Last Updated (UTC):** ${{ steps.greeting.outputs.time }}" >> TIMESTAMP.md
+          echo "**Current Day:** ${{ steps.greeting.outputs.day }}" >> TIMESTAMP.md
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: update timestamp"
-          title: "⏰ Time Update: ${{ steps.ts.outputs.now }}"
-          body: "Automated timestamp update to verify the PR pipeline."
-          branch: auto-time-update
+          commit-message: "chore: update friendly timestamp"
+          title: "⏰ ${{ steps.greeting.outputs.msg }} (${{ steps.greeting.outputs.time }})"
+          body: "Automated update with personalized greeting for ${{ steps.greeting.outputs.day }}."
+          branch: auto-friendly-time
           delete-branch: true
