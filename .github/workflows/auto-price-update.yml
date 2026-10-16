@@ -1,0 +1,40 @@
+name: Auto Price Update
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Attempt to run every 5 mins (GitHub's fastest common interval)
+  workflow_dispatch: # THIS IS YOUR "TEST NOW" BUTTON
+
+jobs:
+  update-price:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Fetch Bitcoin Price
+        id: fetch_price
+        run: |
+          PRICE=$(curl -s https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd | jq -r '.bitcoin.usd')
+          echo "price=$PRICE" >> $GITHUB_OUTPUT
+          echo "Current BTC Price: \$$PRICE"
+
+      - name: Update Tracker File
+        run: |
+          echo "# Bitcoin Price Tracker" > PRICE_TRACKER.md
+          echo "" >> PRICE_TRACKER.md
+          echo "Last Price: \$${{ steps.fetch_price.outputs.price }}" >> PRICE_TRACKER.md
+          echo "Last Updated: $(date)" >> PRICE_TRACKER.md
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update BTC price to \$${{ steps.fetch_price.outputs.price }}"
+          title: "💰 BTC Price Update: \$${{ steps.fetch_price.outputs.price }}"
+          body: "Automated update of the Bitcoin price tracker. Current price: \$${{ steps.fetch_price.outputs.price }}"
+          branch: auto-price-update
+          delete-branch: true
