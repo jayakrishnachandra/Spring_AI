@@ -1,0 +1,51 @@
+name: PR Reviewer Bot
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Analyze PR
+        id: analyze
+        run: |
+          # Count changed files
+          FILES_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...${{ github.head_ref }} | wc -l)
+          echo "files_count=$FILES_CHANGED" >> "$GITHUB_OUTPUT"
+
+      - name: Post Review Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const filesCount = "${{ steps.analyze.outputs.files_count }}";
+            const body = `## 🤖 PR Reviewer Bot First Pass
+
+Hello! I've scanned this PR. Here is the initial report:
+
+### 📊 Statistics
+- **Files Changed:** ${filesCount}
+
+### 📝 Review Checklist
+- [ ] **Self-Review**: Have you double-checked your changes?
+- [ ] **Tests**: Do the changes pass all local tests?
+- [ ] **Docs**: Is the README or documentation updated if needed?
+- [ ] **Cleanliness**: Removed all debug console.logs/print statements?
+
+${filesCount > 10 ? '⚠️ **Warning:** This is a large PR. Consider breaking it into smaller chunks for easier review!' : '✅ **Size:** This PR is a manageable size.'}
+
+*This is an automated comment. Please check the boxes above as you complete them!*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            })
